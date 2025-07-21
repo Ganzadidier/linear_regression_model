@@ -1,49 +1,48 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from fastapi import FastAPI
+from pydantic import BaseModel
+import joblib
 import numpy as np
-import pickle
+import os
 
 app = FastAPI()
 
-# Enable CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Adjust this for production (e.g., specific domains)
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Log current files in the working directory
+print("Files in the directory:", os.listdir('.'))
 
-# Define the input schema with field constraints
-class CropFeatures(BaseModel):
-    Elevation: float = Field(..., ge=0, le=10000)
-    Latitude: float = Field(..., ge=-90, le=90)
-    Longitude: float = Field(..., ge=-180, le=180)
-    Slope: float = Field(..., ge=0, le=90)
-    Rainfall: float = Field(..., ge=0)
+# Load model with try-except block
+try:
+    model = joblib.load("best_model.pkl")
+    print("Model loaded successfully.")
+except Exception as e:
+    print(f"Error loading the model: {e}")
+    model = None
+
+# Define all features
+class CropPredictionFeatures(BaseModel):
+    Elevation: float
+    Latitude: float
+    Longitude: float
+    Slope: float
+    Rainfall: float
     Min_temperature_C: float
     Max_temperature_C: float
     Ave_temps: float
-    Soil_fertility: float = Field(..., ge=0, le=10)
-    pH: float = Field(..., ge=0, le=14)
-    Pollution_level: float = Field(..., ge=0)
-    Plot_size: float = Field(..., ge=0)
-    Annual_yield: float = Field(..., ge=0)
-
+    Soil_fertility: float
+    pH: float
+    Pollution_level: float
+    Plot_size: float
+    Annual_yield: float
     Location_Rural_Amanzi: int
     Location_Rural_Hawassa: int
     Location_Rural_Kilimani: int
     Location_Rural_Sokoto: int
-
     Soil_type_Peaty: int
     Soil_type_Rocky: int
     Soil_type_Sandy: int
     Soil_type_Silt: int
     Soil_type_Volcanic: int
-
     Crop_type_cassava: int
-    Crop_type_cassava_: int
+    Crop_type_cassava_: int  # Note the underscore to fix the duplicate name
     Crop_type_coffee: int
     Crop_type_maize: int
     Crop_type_potato: int
@@ -53,22 +52,17 @@ class CropFeatures(BaseModel):
     Crop_type_wheat: int
     Crop_type_wheat_: int
 
-# Load model with try-except and print
-try:
-    with open("best_model.pkl", "rb") as f:
-        model = pickle.load(f)
-    print("Model loaded successfully.")
-except Exception as e:
-    print("Error loading the model:", e)
-    model = None
+@app.get("/")
+def home():
+    return {"message": "Crop Income Prediction API is running."}
 
 @app.post("/predict")
-def predict_yield(features: CropFeatures):
+def predict_income(features: CropPredictionFeatures):
+    if model is None:
+        return {"error": "Model not loaded properly."}
     try:
-        if model is None:
-            raise ValueError("Model not loaded properly.")
-
-        input_data = np.array([[  # Ensure input matches training feature order
+        # Convert input data to numpy array
+        input_data = np.array([[
             features.Elevation,
             features.Latitude,
             features.Longitude,
@@ -100,14 +94,11 @@ def predict_yield(features: CropFeatures):
             features.Crop_type_tea,
             features.Crop_type_tea_,
             features.Crop_type_wheat,
-            features.Crop_type_wheat_,
+            features.Crop_type_wheat_
         ]])
 
-        print("Received input:", input_data)
         prediction = model.predict(input_data)
-        print("Prediction result:", prediction)
-
-        return {"predicted_yield": prediction[0]}
+        return {"Predicted_Income": float(prediction[0])}
     except Exception as e:
-        print("Prediction error:", e)
-        raise HTTPException(status_code=500, detail=f"Prediction error: {e}")
+        print(f"Prediction error: {e}")
+        return {"error": "An error occurred during prediction."}
