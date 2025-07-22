@@ -57,7 +57,7 @@ def home():
     return {"message": "Crop Income Prediction API is running."}
 
 @app.post("/predict")
-def predict_income(features: CropPredictionFeatures):
+def predict_yield(features: CropPredictionFeatures):
     if model is None:
         return {"error": "Model not loaded properly."}
     try:
@@ -98,7 +98,7 @@ def predict_income(features: CropPredictionFeatures):
         ]])
 
         prediction = model.predict(input_data)
-        return {"Predicted_Income": float(prediction[0])}
+        return {"Predicted_yield": float(prediction[0])}
     except Exception as e:
         print(f"Prediction error: {e}")
         return {"error": "An error occurred during prediction."}
