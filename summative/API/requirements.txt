@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+scikit-learn==1.3.0
+pydantic
+joblib
+numpy==1.24.4
