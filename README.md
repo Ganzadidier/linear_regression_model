@@ -8,9 +8,13 @@ This project predicts crop yield based on environmental and farming parameters s
   Prediction Endpoint (POST): /predict
 
 # Quick Test Using Curl
+
 curl -X POST "https://linear-regression-model-1-y26q.onrender.com/predict" \
+
 -H "Content-Type: application/json" \
+
 -d '{
+
   "Elevation": 1500,
   "Latitude": 0.34,
   "Longitude": 32.58,
@@ -43,9 +47,10 @@ curl -X POST "https://linear-regression-model-1-y26q.onrender.com/predict" \
   "Crop_type_tea_": 0,
   "Crop_type_wheat": 0,
   "Crop_type_wheat_": 0
+  
 }'
 # Video Demo
-YouTube Demo (5 min): https://youtu.be/example
+YouTube Demo (5 min): https://youtu.be/cBxqsv-JX58 
 
 # Running the Mobile App
   Install Flutter.
